@@ -1,0 +1,18 @@
+# Local environments and caches
+.venv/
+.cache/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Local configuration and runtime state
+config.local.yaml
+.wm_state.json
+.wm_backup/
+
+# Generated test artifacts and logs
+tests/out/
+.pytest_log.txt
+
+# Local assistant settings
+.claude/

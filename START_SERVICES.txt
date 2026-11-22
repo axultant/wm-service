@@ -1,0 +1,53 @@
+WM-SERVICE STARTUP INSTRUCTIONS
+===============================
+
+Project folder:
+D:\wm-service
+
+The two services use separate ports:
+- IOPaint: http://127.0.0.1:8080
+- Watermark service: http://127.0.0.1:9000
+
+1. START IOPAINT
+----------------
+Open a terminal and run:
+
+iopaint start --model lama --port 8080
+
+Keep this terminal open while using the application.
+
+2. START THE WATERMARK SERVICE
+------------------------------
+Open a second terminal and run:
+
+cd /d D:\wm-service
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 9000
+
+Keep this terminal open while using the application.
+
+3. OPEN THE APPLICATION
+-----------------------
+Open this address in a browser:
+
+http://127.0.0.1:9000/
+
+The application is configured to browse photos in:
+
+D:\all_photos
+
+4. START WITHOUT IOPAINT (OPTIONAL)
+------------------------------------
+For interface testing without a running IOPaint service, open a terminal and run:
+
+cd /d D:\wm-service
+.venv\Scripts\python.exe -m app.main --mock-inpaint --port 9000
+
+Mock mode returns the original image unchanged instead of removing watermarks.
+
+5. STOP THE SERVICES
+--------------------
+In each service terminal, press:
+
+Ctrl+C
+
+Start IOPaint before the watermark service when actual watermark removal is needed.

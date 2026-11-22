@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wm-service</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">wm-service</div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="remove">1. Remove</button>
+    <button class="tab" data-tab="wm">2. Watermark</button>
+  </nav>
+  <div id="file-info" class="file-info">No photo open</div>
+  <button id="iop-status" class="pill" title="Click to re-check">IOPaint: …</button>
+</header>
+
+<div class="layout">
+  <aside id="sidebar">
+    <div class="side-title">Folders</div>
+    <div id="tree" class="tree"></div>
+    <div class="side-title" id="grid-title">Photos</div>
+    <div id="selection-toolbar" class="selection-toolbar" hidden>
+      <button id="select-all">Select all</button><button id="select-none">Select none</button>
+      <button id="select-invert">Invert</button><button id="select-unprocessed">Select not processed</button>
+      <span id="selection-count">Selected 0 of 0</span>
+      <button id="batch-open" class="primary">Watermark selected (0)</button>
+    </div>
+    <div id="grid" class="grid"><div class="hint">Pick a folder</div></div>
+  </aside>
+
+  <main>
+    <!-- ============ TAB 1: REMOVE ============ -->
+    <section id="tab-remove" class="tabpane active">
+      <div class="toolbar">
+        <label title="Brush size ([ / ] or Ctrl+wheel)">Brush
+          <input id="brush" type="range" min="1" max="500" value="40"><input id="brush-val" class="number-val" type="number" min="1" max="500" step="1" value="40" aria-label="Brush size"></label>
+        <button id="eraser" class="toggle" title="Eraser (E, or hold Alt)">Eraser</button>
+        <button id="clear-mask" title="Clear mask">Clear</button>
+        <span class="sep"></span>
+        <label title="Grow the mask before inpainting">Dilate
+          <input id="dilate" type="range" min="0" max="20" value="6"><input id="dilate-val" class="number-val" type="number" min="0" max="20" step="1" value="6" aria-label="Mask dilation in pixels"><span>px</span></label>
+        <button id="inpaint" class="primary" title="Inpaint (Enter)">Inpaint</button>
+        <span class="sep"></span>
+        <button id="undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button id="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+        <span class="sep"></span>
+        <button id="show-orig" class="toggle" title="Show original (hold V)">Original</button>
+        <button id="split-mode" class="toggle" title="Before/after slider">Before/After</button>
+        <button id="rm-fit" title="Fit (F)">Fit</button>
+        <span class="grow"></span>
+        <button id="send" class="primary" title="Send current result to the watermark step">Send &rarr;</button>
+        <button id="skip-remove" title="Skip removal and watermark this photo">Skip removal &rarr; Watermark</button>
+        <button id="restore" title="Restore the first backup of this photo" disabled>Restore original</button>
+      </div>
+      <div id="rm-viewport" class="viewport">
+        <div id="rm-stage" class="stage">
+          <img id="rm-cur" alt="" draggable="false">
+          <img id="rm-orig" alt="" draggable="false" hidden>
+          <canvas id="rm-mask"></canvas>
+          <div id="rm-divider" hidden></div>
+        </div>
+        <div id="rm-cursor" class="brush-cursor" hidden></div>
+        <div id="rm-badge" class="badge-orig" hidden>ORIGINAL</div>
+        <input id="rm-split" class="split" type="range" min="0" max="100" value="50" hidden>
+        <div id="rm-empty" class="empty">Open a photo from the left panel.<br>
+          <small>Paint over the old watermark, then Inpaint. Wheel = zoom, Space/middle-drag = pan,
+            [ ] = brush, Alt = erase, V = original, Ctrl+Z = undo.</small></div>
+        <div id="rm-busy" class="overlay" hidden><div class="spinner"></div><span>Inpainting…</span></div>
+      </div>
+      <div id="rm-msg" class="statusbar"></div>
+    </section>
+
+    <!-- ============ TAB 2: WATERMARK ============ -->
+    <section id="tab-wm" class="tabpane">
+      <div class="toolbar">
+        <div class="placement"><b>Placement</b>
+          <div class="anchor-grid" id="wm-anchors">
+            <button data-x="0" data-y="0">↖</button><button data-x=".5" data-y="0">↑</button><button data-x="1" data-y="0">↗</button>
+            <button data-x="0" data-y=".5">←</button><button data-x=".5" data-y=".5">·</button><button data-x="1" data-y=".5">→</button>
+            <button data-x="0" data-y="1">↙</button><button data-x=".5" data-y="1">↓</button><button data-x="1" data-y="1">↘</button>
+          </div>
+        </div>
+        <label>Logo width <input id="wm-logo" type="range" min="0.05" max="0.5" step="0.005"><span id="wm-logo-val" class="val"></span></label>
+        <label>Margin X <input id="wm-mx" type="range" min="0" max="0.2" step="0.005"><span id="wm-mx-val" class="val"></span></label>
+        <label>Margin Y <input id="wm-my" type="range" min="0" max="0.2" step="0.005"><span id="wm-my-val" class="val"></span></label>
+        <label>Text opacity <input id="wm-op" type="range" min="0" max="1" step="0.01"><span id="wm-op-val" class="val"></span></label>
+        <label>Text angle <input id="wm-ang" type="range" min="-90" max="90" step="1"><span id="wm-ang-val" class="val"></span></label>
+        <label><input id="wm-logo-on" type="checkbox"> Logo</label><label><input id="wm-text-on" type="checkbox"> Text</label>
+        <button id="wm-reset" title="Reset to config.yaml values">Reset to template</button>
+        <button id="wm-default">Save as default template</button>
+        <button id="wm-yaml" title="Copy current values as YAML">Copy as YAML</button>
+        <span class="sep"></span>
+        <button id="wm-toggle" class="toggle on" title="Show/hide watermark (W)">Watermark</button>
+        <button id="wm-fit" title="Fit (F)">Fit</button>
+        <span class="grow"></span>
+        <button id="wm-download" class="primary">Download</button>
+        <button id="wm-save" class="danger">Save to folder (replace original)</button>
+        <button id="wm-save-cancel" hidden>Cancel</button>
+      </div>
+      <div id="wm-target" class="target"></div>
+      <div id="wm-viewport" class="viewport">
+        <div id="wm-stage" class="stage"><img id="wm-img" alt="" draggable="false"></div>
+        <div id="wm-empty" class="empty">Nothing sent yet. Finish step 1 and press <b>Send</b>.</div>
+        <div id="wm-busy" class="overlay" hidden><div class="spinner"></div><span>Rendering…</span></div>
+      </div>
+      <div id="wm-msg" class="statusbar"></div>
+      <textarea id="yaml-out" class="yaml-out" readonly hidden></textarea>
+    </section>
+
+    <section id="batch-panel" class="batch-panel" hidden>
+      <div class="batch-head"><b>Batch watermarking</b><button id="batch-close">Close</button></div>
+      <div id="batch-summary"></div>
+      <img id="batch-preview" alt="Sample watermark preview" hidden>
+      <div class="batch-options">
+        <label>Mode <select id="batch-mode"><option value="replace">Replace originals</option><option value="copy">Copy to _watermarked</option></select></label>
+        <label><input id="batch-skip" type="checkbox" checked> Skip processed</label>
+      </div>
+      <button id="batch-confirm" class="primary">Confirm and start</button>
+      <button id="batch-retry" hidden>Retry failed</button>
+      <button id="batch-cancel" hidden>Cancel job</button>
+      <progress id="batch-progress" value="0" max="1"></progress><span id="batch-current"></span>
+      <div id="batch-results" class="batch-results"></div>
+    </section>
+  </main>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>

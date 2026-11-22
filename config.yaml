@@ -1,0 +1,46 @@
+# wm-service configuration. Env vars override: IOPAINT_URL, ALLOWED_ROOTS, PORT, WM_MOCK_INPAINT.
+
+iopaint_url: http://127.0.0.1:8080
+host: 127.0.0.1
+port: 9000
+
+# Only folders inside these roots can be browsed / read / written.
+# Several roots allowed. ALLOWED_ROOTS env var (separated by ';' on Windows) replaces this list.
+allowed_roots:
+  - D:/all_photos
+
+mock_inpaint: false        # same as --mock-inpaint / WM_MOCK_INPAINT=1
+
+inpaint:
+  timeout: 300             # seconds
+  hd_strategy: Crop        # IOPaint: Crop | Resize | Original
+  crop_margin: 128         # IOPaint field hd_strategy_crop_margin
+  crop_trigger_size: 800   # IOPaint field hd_strategy_crop_trigger_size
+  default_dilate_px: 6
+
+# Save (replace original)
+backup: true               # copy original to <root>/.wm_backup/<relative path> once, before first overwrite
+jpeg_quality: 95           # JPEG written with subsampling=0 (4:4:4)
+webp_quality: 95
+batch_workers: 2
+
+cache_dir: .cache          # thumbnails; relative to the project dir
+
+assets:
+  logo: assets/logo.png    # RGBA PNG; bigger than the largest target width (0.21 * 6000 px = 1260 px)
+  font: assets/font.ttf    # if missing, Pillow's bundled open font is used
+
+# Watermark template. Sizes are fractions of image WIDTH (logo_max_height: of height).
+watermark:
+  logo_width: 0.21
+  logo_margin_x: 0.02
+  logo_margin_y: 0.02
+  logo_max_height: 0.12
+  text_font: 0.035
+  text_gap_x: 0.10
+  text_step_y: 0.13
+  text_opacity: 0.28
+  text_angle: 30.0
+  text_mode: diagonal_tiled   # diagonal_tiled | single_line
+  min_font_px: 10
+  company_text: AlashEd
