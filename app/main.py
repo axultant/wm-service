@@ -229,6 +229,7 @@ def create_app(settings: Settings | None = None, client: IOPaintClient | None = 
         s.watermark = cfg
         return {"path": str(path), "watermark": asdict(cfg)}
 
+    @app.get("/api/health")
     def api_health():
         return client.health()
 

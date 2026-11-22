@@ -22,6 +22,12 @@ def _pair(w=320, h=240):
     return img, mask
 
 
+def test_health_endpoint(client):
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    assert r.json()["mock"] is True
+
+
 def test_remove_mock_roundtrip(client):
     img, mask = _pair()
     r = client.post("/api/remove", data={"dilate_px": "6"},
