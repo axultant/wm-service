@@ -112,6 +112,16 @@ def test_watermark_endpoint_formats(client):
     assert r.status_code == 400
 
 
+def test_truncated_image_returns_bad_request(client, roots):
+    root, _ = roots
+    path = root / "truncated.jpg"
+    Image.new("RGB", (40, 30), (1, 2, 3)).save(path, "JPEG")
+    path.write_bytes(path.read_bytes()[:-22])
+    response = client.get("/api/image", params={"path": str(path)})
+    assert response.status_code == 400
+    assert "decode" in response.json()["error"].lower()
+
+
 def test_browse_endpoints(client, roots):
     root, outside = roots
     Image.new("RGB", (800, 600)).save(root / "sub" / "a.jpg")

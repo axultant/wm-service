@@ -251,7 +251,10 @@ def create_app(settings: Settings | None = None, client: IOPaintClient | None = 
     @app.get("/api/image")
     def api_image(path: str):
         p, _ = files.resolve_image(path, s.allowed_roots)
-        data, (w, h) = files.load_transposed_png(p)
+        try:
+            data, (w, h) = files.load_transposed_png(p)
+        except (UnidentifiedImageError, OSError) as e:
+            raise BadRequest(f"Could not decode image: {e}")
         return Response(data, media_type="image/png", headers={
             "Cache-Control": "no-store", "X-Image-Width": str(w), "X-Image-Height": str(h)})
 
