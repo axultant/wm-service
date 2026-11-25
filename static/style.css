@@ -44,6 +44,7 @@ aside { width: 300px; min-width: 220px; display: flex; flex-direction: column; b
 .twisty { width: 16px; text-align: center; color: var(--muted); flex: none; }
 .twisty.empty { visibility: hidden; }
 .label { overflow: hidden; text-overflow: ellipsis; }
+.folder-count { margin-left: auto; padding-left: 6px; color: var(--muted); font-size: 11px; flex: none; }
 .grid { flex: 1; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 6px; padding: 6px; align-content: start; }
 .tile { position: relative; background: var(--panel2); border: 2px solid transparent; border-radius: 4px;

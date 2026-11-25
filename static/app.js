@@ -692,13 +692,15 @@ $('#wm-save').addEventListener('click', async () => {
 const tree = $('#tree');
 const grid = $('#grid');
 
-function makeNode(name, path, expand) {
+function makeNode(name, path, expand, photoCount = null) {
   const el = document.createElement('div'); el.className = 'node';
   const row = document.createElement('div'); row.className = 'row'; row.title = path;
   const tw = document.createElement('span'); tw.className = 'twisty'; tw.textContent = '▸';
   const lb = document.createElement('span'); lb.className = 'label'; lb.textContent = name;
+  const count = document.createElement('span'); count.className = 'folder-count';
+  count.textContent = photoCount == null ? '' : `(${photoCount})`;
   const kids = document.createElement('div'); kids.className = 'kids'; kids.hidden = true;
-  row.append(tw, lb); el.append(row, kids);
+  row.append(tw, lb, count); el.append(row, kids);
   let loaded = false;
   async function toggle(open) {
     if (open === undefined) open = kids.hidden;
@@ -706,7 +708,7 @@ function makeNode(name, path, expand) {
       loaded = true;
       try {
         const d = await api.json('/api/folders?' + qs({ path }));
-        d.folders.forEach((f) => kids.append(makeNode(f.name, f.path)));
+        d.folders.forEach((f) => kids.append(makeNode(f.name, f.path, false, f.photo_count)));
         if (!d.folders.length) tw.classList.add('empty');
       } catch (e) { kids.textContent = e.message; }
     }
@@ -730,6 +732,9 @@ async function selectFolder(path, row) {
     S.selected.clear(); S.lastSelected = -1;
     S.processed = new Set(Object.keys(state.statuses || {}));
     S.restorable = new Set(Object.entries(state.statuses || {}).filter(([, entry]) => entry.backup_path).map(([path]) => path));
+    const folderNode = row.closest('.node');
+    const folderCount = folderNode?.querySelector(':scope > .row > .folder-count');
+    if (folderCount) folderCount.textContent = `(${d.images.length})`;
     $('#selection-toolbar').hidden = false;
     updateSelectionUi();
     $('#grid-title').textContent = `Photos (${d.images.length})`;
@@ -929,7 +934,12 @@ window.addEventListener('beforeunload', (e) => { if (S.dirty) { e.preventDefault
   if (!S.cfg.roots.length) {
     tree.innerHTML = '<div class="hint">No allowed_roots configured.<br>Set allowed_roots in config.yaml or the ALLOWED_ROOTS env var.</div>';
   } else {
-    S.cfg.roots.forEach((r, i) => tree.append(makeNode(r, r, i === 0)));
+    try {
+      const roots = await api.json('/api/folders');
+      roots.folders.forEach((r, i) => tree.append(makeNode(r.name, r.path, i === 0, r.photo_count)));
+    } catch (e) {
+      tree.innerHTML = `<div class="hint">Could not load folders: ${e.message}</div>`;
+    }
   }
   if (!S.cfg.has_logo) setMsg(wm.msg, 'assets/logo.png not found: the watermark will have no logo.', 'error');
   checkHealth();

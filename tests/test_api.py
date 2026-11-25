@@ -127,6 +127,9 @@ def test_browse_endpoints(client, roots):
     Image.new("RGB", (800, 600)).save(root / "sub" / "a.jpg")
     assert client.get("/api/folders").json()["folders"][0]["path"] == str(root.resolve())
     assert [f["name"] for f in client.get("/api/folders", params={"path": str(root)}).json()["folders"]] == ["sub"]
+    folders = client.get("/api/folders", params={"path": str(root)}).json()
+    assert folders["photo_count"] == 1
+    assert folders["folders"][0]["photo_count"] == 1
     imgs = client.get("/api/images", params={"path": str(root / "sub")}).json()["images"]
     assert imgs[0]["name"] == "a.jpg" and imgs[0]["size"] > 0
     t = client.get("/api/thumb", params={"path": imgs[0]["path"], "w": 128})

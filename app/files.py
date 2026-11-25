@@ -96,12 +96,29 @@ def natural_key(name: str):
 
 # --------------------------------------------------------------------------- listing
 
+def _count_images(path: Path, roots: list[Path]) -> int:
+    count = 0
+    for current, dirs, names in os.walk(path, topdown=True, followlinks=False):
+        dirs[:] = [name for name in dirs if not name.startswith(".") and name not in HIDDEN_DIRS]
+        for name in names:
+            if Path(name).suffix.lower() not in IMAGE_EXTS:
+                continue
+            candidate = Path(current) / name
+            try:
+                if candidate.is_file():
+                    resolve_in_roots(candidate, roots)
+                    count += 1
+            except (PathError, OSError):
+                continue
+    return count
+
+
 def list_folders(raw: str | None, roots: list[Path]) -> dict:
     if not raw:
         return {
             "path": None,
             "parent": None,
-            "folders": [{"name": str(r), "path": str(r)} for r in roots],
+            "folders": [{"name": str(r), "path": str(r), "photo_count": _count_images(r, roots)} for r in roots],
         }
     path, root = resolve_dir(raw, roots)
     folders = []
@@ -118,12 +135,14 @@ def list_folders(raw: str | None, roots: list[Path]) -> dict:
             resolved, _ = resolve_in_roots(e.path, roots)  # drop symlinks escaping the roots
         except (PathError, OSError):
             continue
-        folders.append({"name": e.name, "path": str(Path(e.path))})
+        folders.append({"name": e.name, "path": str(Path(e.path)),
+                        "photo_count": _count_images(resolved, roots)})
     folders.sort(key=lambda f: natural_key(f["name"]))
     parent = None
     if path != root:
         parent = str(path.parent)
-    return {"path": str(path), "parent": parent, "root": str(root), "folders": folders}
+    return {"path": str(path), "parent": parent, "root": str(root),
+            "photo_count": _count_images(path, roots), "folders": folders}
 
 
 def list_images(raw: str, roots: list[Path]) -> dict:
